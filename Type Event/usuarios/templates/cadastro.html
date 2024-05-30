@@ -1,0 +1,58 @@
+{% extends 'bases/base.html' %}
+{% load static %}
+{% block 'head' %}
+    <link href={% static 'usuarios/css/usuarios.css' %} rel="stylesheet">
+{% endblock %}
+
+{% block 'body' %}
+
+    <div class="container-fluid bg-inscricao">
+        
+        <div class="row">
+            <div class="col-md">
+                <h3 class="logo">Type.Event</h3>
+                <div class="box-form">
+                    <h3>CADASTRO</h3>
+                    <hr style="border-color: #7E7B7C">
+                    {% if messages %}
+                        {% for i in messages%}
+                            <div class="alert {{i.tags}}" role="alert">{{i}}</div> 
+                        {% endfor %}
+                    {% endif %}
+                    <form action="{% url 'cadastro' %}" method="POST"> {% csrf_token %}
+                        <label>Username:</label> 
+                        <input type="text" class="form-control" placeholder="Username..." name="username">
+                        <br>
+                        <label>E-mail:</label>
+                        <input type="email" class="form-control" placeholder="E-mail..." name="email">
+                        <br>
+                        <div class="row">
+                            <div class="col-md">
+                                <label>Senha:</label>
+                                <input type="password" class="form-control" placeholder="Senha..." name="senha">
+                            </div>
+                
+                            <div class="col-md">
+                                <label>Confirmar senha:</label>
+                                <input type="password" class="form-control" placeholder="Confirmar senha..." name="confirmar_senha">
+                            </div>
+                        </div>
+                        <a href="{% url 'login' %}" class="link">Já possuo uma conta</a>
+                        <br>
+                        <br>
+                        <input type="submit" value="CADASTRAR" class="btn-principal">
+                    </form>
+                </div>
+                
+
+                <img src="{% static 'geral/img/logo.png' %}" class="logo-evento">
+
+            </div>
+
+            <div class="col-md bg-img">
+            </div>
+        
+        </div>
+    </div>
+
+{% endblock %}
