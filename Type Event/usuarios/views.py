@@ -23,7 +23,7 @@ def login(request):
               return redirect('/auth/login')
          
          auth.login(request,usuario)
-         return redirect('eventos/novo_evento/')
+         return redirect('/eventos/novo_evento/')
     
 
     

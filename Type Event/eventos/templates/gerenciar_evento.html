@@ -32,8 +32,13 @@
                 <th>Link de inscrição</th>
             </tr>
             {% for evento in eventos %}
+            
             <tr class="{% cycle 'linha' 'linha2' %}">
+                {% if evento.criador == request.user %}
+                <td width="10%"><a href="{% url 'participantes_evento' evento.id  %}"><img width="100%" src="{{evento.logo.url}}"></a></td>
+                {% else %}
                 <td width="10%"><a href="{% url 'inscrever_evento' evento.id %}"><img width="100%" src="{{evento.logo.url}}"></a></td>
+                {% endif %}
                 <td>{{evento.nome}}</td>
                 <td>{{evento.descricao}}</td>
                 <td>{{evento.data_inicio}}</td>
