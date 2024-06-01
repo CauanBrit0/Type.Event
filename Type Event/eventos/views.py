@@ -136,9 +136,9 @@ def gerar_certificado(request ,id):
     
     for participante in evento.participantes.all():
         #TODO VALIDAR SE O CERTIFICADO JÁ FOI GERADO.
+        path_template = os.path.join(settings.BASE_DIR, 'templates/static/evento/img/template_certificado.png')
         img = Image.open(path_template)
         draw = ImageDraw.Draw(img)
-
         font_nome = ImageFont.truetype(path_fonte, 80)
         font_info = ImageFont.truetype(path_fonte, 30)
 
@@ -165,3 +165,17 @@ def gerar_certificado(request ,id):
     
     messages.add_message(request, constants.SUCCESS, 'Certificados gerados')
     return redirect(reverse('certificados_evento', kwargs={'id': evento.id}))
+
+
+def procurar_certificado(request, id):
+    evento = get_object_or_404(Evento, id = id)
+    if not evento.criador == request.user:
+        raise Http404('Esse evento não pertence a você.')
+    
+    email = request.POST.get('email')
+    certificado = Certificado.objects.filter(evento = evento).filter(participante__email = email).first()
+    if not certificado:
+        messages.add_message(request, constants.WARNING, 'Certificado não encontrado')
+        return redirect(reverse('certificados_evento', kwargs={'id': evento.id}))
+    
+    return redirect(certificado.certificado.url)
