@@ -3,12 +3,17 @@ from django.http import HttpResponse, Http404
 from django.contrib.messages import constants
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import Evento
+from .models import Evento, Certificado
 from django.urls import reverse
 import csv
 from secrets import token_urlsafe
 import os
 from django.conf import settings
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+import sys
+
 
 @login_required(login_url='/auth/login/')
 def novo_evento(request):
@@ -106,4 +111,57 @@ def gerar_csv(request, id):
     
     return redirect(f'/media/{token}')
 
+
+
+
+def certificados_evento(request, id):
+    evento = get_object_or_404(Evento, id = id)
+    if not evento.criador == request.user:
+        raise Http404('Esse evento não pertence a você.')
     
+    if request.method == "GET":
+        qtd_certificados = evento.participantes.all().count() - Certificado.objects.filter(evento = evento).count()
+        return render(request, 'certificados_evento.html',{'evento':evento,'qtd_certificados':qtd_certificados})
+
+
+    
+
+def gerar_certificado(request ,id):
+    evento = get_object_or_404(Evento, id = id)
+    if not evento.criador == request.user:
+        raise Http404('Esse evento não pertence a você.')
+    
+    path_template = os.path.join(settings.BASE_DIR,'templates/static/evento/img/template_cerficado.png')
+    path_fonte = os.path.join(settings.BASE_DIR,'templates/static/fontes/arimo.ttf')
+    
+    for participante in evento.participantes.all():
+        #TODO VALIDAR SE O CERTIFICADO JÁ FOI GERADO.
+        img = Image.open(path_template)
+        draw = ImageDraw.Draw(img)
+
+        font_nome = ImageFont.truetype(path_fonte, 80)
+        font_info = ImageFont.truetype(path_fonte, 30)
+
+        draw.text((230, 651), f"{participante.username}", font=font_nome, fill=(0,0,0))
+        draw.text((761, 782), f"{evento.nome}", font=font_info, fill=(0,0,0))
+        draw.text((816, 849), f"{evento.carga_horaria}", font=font_info, fill=(0,0,0))
+        
+        output = BytesIO()
+        img.save(output, format='PNG', quality=100)
+        output.seek(0)
+
+        img_final = InMemoryUploadedFile(output,
+                                        'ImageField',
+                                        f'{token_urlsafe(8)}.png',
+                                        'image/jpeg',
+                                        sys.getsizeof(output),
+                                        None)
+        certificado_gerado = Certificado(
+            certificado=img_final,
+            participante=participante,
+            evento=evento,
+        )
+        certificado_gerado.save()
+    
+    messages.add_message(request, constants.SUCCESS, 'Certificados gerados')
+    return redirect(reverse('certificados_evento', kwargs={'id': evento.id}))
